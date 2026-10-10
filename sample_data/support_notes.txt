@@ -1,0 +1,7 @@
+Support log - internal notes
+
+Customer called from 91234567 about a failed payment.
+Card used ended in 4111 1111 1111 1111 (declined, retry later).
+Follow up by email: support.case@example.no
+Server that logged the error: 192.168.10.45
+Escalated to ola.nordmann@example.no

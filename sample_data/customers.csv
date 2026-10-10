@@ -1,0 +1,4 @@
+id,name,email,phone,national_id,notes
+1,Ola Nordmann,ola.nordmann@example.no,+47 912 34 567,15068700059,VIP customer
+2,Kari Hansen,kari.hansen@example.com,98765432,15068700210,Prefers email contact
+3,Test Testesen,test@example.org,+4722334455,,No national id on file
