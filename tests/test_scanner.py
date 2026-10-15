@@ -8,7 +8,7 @@ SAMPLE = Path(__file__).resolve().parent.parent / "sample_data"
 def test_scan_sample_directory():
     result = scan_path(SAMPLE)
     assert result.files_scanned == 3          # csv, txt, md
-    assert len(result.flagged_files) == 2     # clean_file.md has nothing
+    assert len(result.flagged_files) == 2     # clean_file.md inneholder ingenting
     assert result.total_counts.get("email", 0) >= 3
     assert result.total_counts.get("norwegian_fnr", 0) == 2
     assert result.total_counts.get("payment_card", 0) == 1

@@ -1,11 +1,11 @@
-"""Walk a path, scan files for PII, and aggregate the findings."""
+"""Gå gjennom en sti, skann filer etter PII og samle funnene."""
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from gdpr_scanner.detectors import Match, scan_line
 
-# Only scan text-like files; binaries are skipped.
+# Skann bare tekstfiler; binærfiler hoppes over.
 TEXT_EXTENSIONS = {".txt", ".csv", ".log", ".json", ".md", ".tsv", ".yml", ".yaml"}
 
 
@@ -53,7 +53,7 @@ def scan_file(path: Path) -> FileResult:
 
 
 def scan_path(target: str | Path) -> ScanResult:
-    """Scan a single file or recurse through a directory."""
+    """Skann én fil, eller gå rekursivt gjennom en mappe."""
     target = Path(target)
     result = ScanResult()
 

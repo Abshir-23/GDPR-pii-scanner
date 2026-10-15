@@ -1,34 +1,34 @@
-"""Turn scan results into human- and machine-readable reports."""
+"""Gjør skanneresultater om til rapporter for mennesker og maskiner."""
 import json
 
 from gdpr_scanner.scanner import ScanResult
 
-# Friendly labels for the console report.
+# Lesbare navn til konsollrapporten.
 LABELS = {
-    "email": "Email addresses",
-    "norwegian_fnr": "Norwegian national IDs (fødselsnummer)",
-    "payment_card": "Payment card numbers",
-    "phone": "Phone numbers",
-    "ip_address": "IP addresses",
+    "email": "E-postadresser",
+    "norwegian_fnr": "Norske fødselsnumre",
+    "payment_card": "Betalingskortnumre",
+    "phone": "Telefonnumre",
+    "ip_address": "IP-adresser",
 }
 
 
 def console_report(result: ScanResult) -> str:
     lines: list[str] = []
     lines.append("=" * 60)
-    lines.append("GDPR PII SCAN REPORT")
+    lines.append("GDPR PII-SKANNERAPPORT")
     lines.append("=" * 60)
-    lines.append(f"Files scanned : {result.files_scanned}")
-    lines.append(f"Files skipped : {result.files_skipped} (non-text)")
-    lines.append(f"Files with PII: {len(result.flagged_files)}")
-    lines.append(f"Total findings: {result.total_matches}")
+    lines.append(f"Filer skannet      : {result.files_scanned}")
+    lines.append(f"Filer hoppet over  : {result.files_skipped} (ikke tekst)")
+    lines.append(f"Filer med PII      : {len(result.flagged_files)}")
+    lines.append(f"Totalt antall funn : {result.total_matches}")
     lines.append("")
 
     if not result.total_counts:
-        lines.append("No personal data detected.")
+        lines.append("Fant ingen personopplysninger.")
         return "\n".join(lines)
 
-    lines.append("Findings by type:")
+    lines.append("Funn per type:")
     for pii_type, count in sorted(
         result.total_counts.items(), key=lambda x: -x[1]
     ):
@@ -36,12 +36,12 @@ def console_report(result: ScanResult) -> str:
         lines.append(f"  {label:<42} {count}")
     lines.append("")
 
-    lines.append("Per file (values are masked):")
+    lines.append("Per fil (verdiene er maskert):")
     for f in result.flagged_files:
         lines.append(f"\n  {f.path}")
         for m in f.matches:
             label = LABELS.get(m.pii_type, m.pii_type)
-            lines.append(f"    line {m.line:<5} {label:<42} {m.masked}")
+            lines.append(f"    linje {m.line:<5} {label:<42} {m.masked}")
 
     return "\n".join(lines)
 

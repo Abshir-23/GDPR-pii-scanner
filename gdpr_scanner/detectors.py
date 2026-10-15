@@ -1,9 +1,9 @@
-"""Detectors for common types of personal data (PII).
+"""Detektorer for vanlige typer personopplysninger (PII).
 
-Each detector is a regex plus, where it matters, a validator that rejects
-false positives (a checksum for Norwegian national IDs, the Luhn algorithm
-for payment cards). Detecting on structure alone is noisy; validating makes
-the report trustworthy.
+Hver detektor er et regex-mønster, og der det betyr noe, en validering som
+avviser falske treff (kontrollsifre for norske fødselsnumre, Luhn-algoritmen
+for betalingskort). Å detektere bare på struktur gir mye støy; validering gjør
+rapporten pålitelig.
 """
 import re
 from dataclasses import dataclass
@@ -17,9 +17,9 @@ class Match:
 
     @property
     def masked(self) -> str:
-        """Mask the value so the report itself does not leak personal data.
+        """Masker verdien slik at rapporten selv ikke lekker personopplysninger.
 
-        Keeps the last 2 characters for context, hides the rest.
+        Beholder de 2 siste tegnene som kontekst og skjuler resten.
         """
         v = self.value
         if len(v) <= 2:
@@ -27,25 +27,25 @@ class Match:
         return "*" * (len(v) - 2) + v[-2:]
 
 
-# --- Regex patterns -------------------------------------------------------
+# --- Regex-mønstre --------------------------------------------------------
 
 _EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
-# Norwegian phone: optional +47 / 0047, then exactly 8 digits with optional
-# single spaces (handles 2-2-2-2 and 3-2-3 groupings). The lookarounds make
-# sure we are not matching 8 digits that are really part of a longer spaced
-# run such as a 16-digit payment card.
+# Norsk telefonnummer: valgfri +47 / 0047, deretter nøyaktig 8 siffer med
+# valgfrie enkle mellomrom (håndterer grupperingene 2-2-2-2 og 3-2-3).
+# Lookaround-delene sørger for at vi ikke treffer 8 siffer som egentlig er
+# en del av en lengre tallrekke med mellomrom, som et betalingskort på 16 siffer.
 _PHONE_NO = re.compile(
     r"(?<!\d)(?<!\d )(?:(?:\+47|0047)[ ]?)?\d(?:[ ]?\d){7}(?![ ]?\d)"
 )
-_FNR = re.compile(r"(?<!\d)\d{11}(?!\d)")                 # Norwegian fødselsnummer
-_CARD = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")    # payment card
+_FNR = re.compile(r"(?<!\d)\d{11}(?!\d)")                 # norsk fødselsnummer
+_CARD = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")    # betalingskort
 _IPV4 = re.compile(
     r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b"
 )
 
 
 def _valid_fnr(value: str) -> bool:
-    """Validate a Norwegian fødselsnummer using its two control digits (mod 11)."""
+    """Valider et norsk fødselsnummer med de to kontrollsifrene (mod 11)."""
     if len(value) != 11 or not value.isdigit():
         return False
     d = [int(c) for c in value]
@@ -63,7 +63,7 @@ def _valid_fnr(value: str) -> bool:
 
 
 def _valid_card(value: str) -> bool:
-    """Validate a payment card number with the Luhn algorithm."""
+    """Valider et betalingskortnummer med Luhn-algoritmen."""
     digits = [int(c) for c in re.sub(r"[ -]", "", value)]
     if not 13 <= len(digits) <= 19:
         return False
@@ -78,7 +78,7 @@ def _valid_card(value: str) -> bool:
 
 
 def scan_line(line: str, line_number: int) -> list[Match]:
-    """Return all PII matches found in a single line of text."""
+    """Returner alle PII-treff i én tekstlinje."""
     matches: list[Match] = []
 
     for m in _EMAIL.finditer(line):
@@ -93,7 +93,7 @@ def scan_line(line: str, line_number: int) -> list[Match]:
             matches.append(Match("payment_card", m.group(), line_number))
 
     for m in _PHONE_NO.finditer(line):
-        # Avoid double-counting an 11-digit fnr as a phone number
+        # Unngå å telle et fødselsnummer på 11 siffer to ganger som telefonnummer
         digits = re.sub(r"\D", "", m.group())
         if len(digits) == 11 and _valid_fnr(digits):
             continue

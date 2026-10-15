@@ -1,101 +1,101 @@
-# GDPR PII Scanner
+# GDPR PII-skanner
 
-An automation tool that scans files and folders for personal data (PII) and reports where it lives. It answers a question every GDPR programme has to answer first: **where is our personal data, and what kind?**
+Et automatiseringsverktøy som skanner filer og mapper etter personopplysninger (PII) og rapporterer hvor de ligger. Det svarer på spørsmålet ethvert GDPR-arbeid må besvare først: **hvor ligger personopplysningene våre, og hva slags opplysninger er det?**
 
-Finding that out by hand does not scale. This tool does it automatically, so it can run on a schedule or inside a CI pipeline.
+Å finne ut av dette for hånd skalerer ikke. Verktøyet gjør det automatisk, så det kan kjøres etter en fast plan eller inne i en CI-pipeline.
 
-## Why this matters for GDPR
+## Hvorfor dette er viktig for GDPR
 
-- **Data discovery / mapping** – you cannot protect or delete personal data you do not know you have. This is the groundwork for a **Record of Processing Activities (Article 30)**.
-- **Data minimisation (Article 5)** – surfacing PII in logs, exports and scratch files shows where data is being kept that probably should not be.
-- **Breach readiness** – knowing which files hold national IDs or card numbers tells you how serious an exposure is.
+- **Kartlegging av data** – du kan ikke beskytte eller slette personopplysninger du ikke vet at du har. Dette er grunnlaget for en **protokoll over behandlingsaktiviteter (artikkel 30)**.
+- **Dataminimering (artikkel 5)** – når PII dukker opp i logger, eksporter og midlertidige filer, ser du hvor data blir lagret som sannsynligvis ikke burde vært det.
+- **Beredskap ved brudd** – når du vet hvilke filer som inneholder fødselsnumre eller kortnumre, vet du hvor alvorlig en lekkasje er.
 
-## What it detects
+## Hva den finner
 
-| Type | How false positives are avoided |
+| Type | Hvordan falske treff unngås |
 |------|-------------------------------|
-| Email addresses | Standard pattern |
-| Norwegian national IDs (fødselsnummer) | Validated with the official mod-11 control digits |
-| Payment card numbers | Validated with the Luhn algorithm |
-| Phone numbers (Norwegian) | Exactly 8 digits, not part of a longer number |
-| IPv4 addresses | Range-checked octets |
+| E-postadresser | Standard mønster |
+| Norske fødselsnumre | Validert med de offisielle kontrollsifrene (mod 11) |
+| Betalingskortnumre | Validert med Luhn-algoritmen |
+| Telefonnumre (norske) | Nøyaktig 8 siffer, ikke del av et lengre tall |
+| IPv4-adresser | Hver oktett sjekkes mot gyldig område |
 
-Validation matters: an 11-digit number is only reported as a national ID if its checksum is valid, and a card number only if it passes Luhn. That keeps the report trustworthy instead of noisy.
+Validering er viktig: et tall med 11 siffer rapporteres bare som fødselsnummer hvis kontrollsifrene stemmer, og et kortnummer bare hvis det består Luhn-sjekken. Det gjør rapporten pålitelig i stedet for full av støy.
 
-## Privacy by design
+## Innebygd personvern
 
-The report **masks every value it finds** (`*********59`), so the output itself does not become a new pile of personal data. A tool built to help with GDPR should not leak PII in its own logs.
+Rapporten **maskerer hver verdi den finner** (`*********59`), slik at resultatet ikke selv blir en ny haug med personopplysninger. Et verktøy som skal hjelpe med GDPR, bør ikke lekke PII i sine egne logger.
 
-## Usage
+## Bruk
 
-No dependencies to install for running it, it uses only the Python standard library.
+Ingen avhengigheter må installeres for å kjøre det, det bruker bare Pythons standardbibliotek.
 
 ```bash
-# Scan a folder
+# Skann en mappe
 python -m gdpr_scanner sample_data/
 
-# Machine-readable output
+# Maskinlesbar utskrift
 python -m gdpr_scanner sample_data/ --format json > report.json
 
-# Fail the build if any PII is found (for CI pipelines)
+# La bygget feile hvis det finnes PII (for CI-pipelines)
 python -m gdpr_scanner ./exports --fail-on-findings
 ```
 
-### Example output
+### Eksempel på utskrift
 
 ```
 ============================================================
-GDPR PII SCAN REPORT
+GDPR PII-SKANNERAPPORT
 ============================================================
-Files scanned : 3
-Files skipped : 0 (non-text)
-Files with PII: 2
-Total findings: 13
+Filer skannet      : 3
+Filer hoppet over  : 0 (ikke tekst)
+Filer med PII      : 2
+Totalt antall funn : 13
 
-Findings by type:
-  Email addresses                            5
-  Phone numbers                              4
-  Norwegian national IDs (fødselsnummer)     2
-  Payment card numbers                       1
-  IP addresses                               1
+Funn per type:
+  E-postadresser                             5
+  Telefonnumre                               4
+  Norske fødselsnumre                        2
+  Betalingskortnumre                         1
+  IP-adresser                                1
 ```
 
-## Automation
+## Automatisering
 
-Because it exits with code `1` when it finds PII, it drops straight into a pipeline. Example GitHub Actions step that blocks a commit from introducing personal data into tracked files:
+Siden verktøyet avslutter med kode `1` når det finner PII, kan det settes rett inn i en pipeline. Eksempel på et steg i GitHub Actions som stopper en commit som legger personopplysninger inn i filer som spores:
 
 ```yaml
-- name: GDPR PII scan
+- name: GDPR PII-skanning
   run: python -m gdpr_scanner . --fail-on-findings
 ```
 
-The same command can run as a scheduled job to keep re-scanning shared folders over time.
+Den samme kommandoen kan kjøres som en planlagt jobb som skanner delte mapper på nytt over tid.
 
-## Project structure
+## Prosjektstruktur
 
 ```
 gdpr_scanner/
-  detectors.py   # regex patterns + fnr/Luhn validators, with value masking
-  scanner.py     # walk files, scan line by line, aggregate results
-  report.py      # console and JSON reports
-  cli.py         # command-line interface
-sample_data/     # fake data to try it on (no real people)
-tests/           # 14 tests for the detectors and the scanner
+  detectors.py   # regex-mønstre + validering av fødselsnummer og Luhn, med maskering av verdier
+  scanner.py     # går gjennom filer, skanner linje for linje og samler resultatene
+  report.py      # rapporter til konsoll og JSON
+  cli.py         # kommandolinjegrensesnitt
+sample_data/     # falske data å teste på (ingen ekte personer)
+tests/           # 14 tester for detektorene og skanneren
 ```
 
-## Tests
+## Tester
 
 ```bash
 pytest -q
 ```
 
-Covers each detector, checksum validation (a wrong fødselsnummer or card number is **not** flagged), value masking, and a full scan of the sample folder.
+Dekker hver detektor, validering av kontrollsifre (et feil fødselsnummer eller kortnummer blir **ikke** flagget), maskering av verdier og en full skanning av eksempelmappen.
 
-## Notes
+## Merknader
 
-- All data in `sample_data/` is synthetic. The national IDs are checksum-valid but do not belong to real people, and the card number is the standard Visa test number.
-- Detection is pattern-based, so it finds structured identifiers well. Free-text names and addresses would need NLP, a natural next step.
+- Alle data i `sample_data/` er syntetiske. Fødselsnumrene har gyldige kontrollsifre, men tilhører ikke ekte personer, og kortnummeret er Visas standard testnummer.
+- Deteksjonen er basert på mønstre, så den finner strukturerte identifikatorer godt. Navn og adresser i fritekst ville krevd språkteknologi (NLP), som er et naturlig neste steg.
 
-## Tech
+## Teknologi
 
-Python (standard library only) · pytest
+Python (bare standardbiblioteket) · pytest

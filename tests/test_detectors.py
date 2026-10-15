@@ -6,24 +6,24 @@ def types(line):
 
 
 def test_email_detected():
-    assert "email" in types("contact me at jane.doe@example.com please")
+    assert "email" in types("kontakt meg på jane.doe@example.com")
 
 
 def test_valid_fnr_detected():
-    assert "norwegian_fnr" in types("id 15068700059 on file")
+    assert "norwegian_fnr" in types("fnr 15068700059 er registrert")
 
 
 def test_invalid_fnr_ignored():
-    # 11 digits but wrong checksum -> not flagged as a national ID
-    assert "norwegian_fnr" not in types("number 12345678901 here")
+    # 11 siffer, men feil kontrollsiffer -> blir ikke flagget som fødselsnummer
+    assert "norwegian_fnr" not in types("nummer 12345678901 her")
 
 
 def test_valid_card_detected():
-    assert "payment_card" in types("card 4111 1111 1111 1111 used")
+    assert "payment_card" in types("kort 4111 1111 1111 1111 brukt")
 
 
 def test_invalid_card_ignored():
-    assert "payment_card" not in types("code 1234 5678 9012 3456 xx")
+    assert "payment_card" not in types("kode 1234 5678 9012 3456 xx")
 
 
 def test_phone_detected():
@@ -31,11 +31,11 @@ def test_phone_detected():
 
 
 def test_ip_detected():
-    assert "ip_address" in types("from host 192.168.10.45 at noon")
+    assert "ip_address" in types("fra vert 192.168.10.45 klokken tolv")
 
 
 def test_clean_line_has_no_findings():
-    assert types("just a normal sentence with no personal data") == set()
+    assert types("bare en vanlig setning uten personopplysninger") == set()
 
 
 def test_masking_hides_most_of_value():
